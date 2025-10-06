@@ -2,10 +2,10 @@
   {
     "image_path": "dataset\\34b3ff00-90b6-4a45-896b-bec14cf4863c.jpg",
     "values": {
-      "heart_rate_value": 173,
-      "humidity_value": 59,
-      "skin_temp_value": 36.3,
-      "spo2_value": 97
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "173",
@@ -17,10 +17,10 @@
   {
     "image_path": "dataset\\097f44f5-96a1-4ddb-a5a5-4310361977f8.jpg",
     "values": {
-      "heart_rate_value": 175,
-      "humidity_value": 59,
-      "skin_temp_value": 36.3,
-      "spo2_value": 99
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "175",
@@ -32,10 +32,10 @@
   {
     "image_path": "dataset\\8511a8b5-e73f-49e0-a7e4-c226d0ecd222.jpg",
     "values": {
-      "heart_rate_value": 172,
-      "humidity_value": 59,
-      "skin_temp_value": 36.3,
-      "spo2_value": 96
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "172",
@@ -47,10 +47,10 @@
   {
     "image_path": "dataset\\75d82643-83ab-49da-b94d-9a4cc5c782fc.jpg",
     "values": {
-      "heart_rate_value": 149,
-      "humidity_value": 77,
-      "skin_temp_value": 35.9,
-      "spo2_value": 93
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "149",
@@ -62,10 +62,10 @@
   {
     "image_path": "dataset\\ff5eac4e-c64f-4f1f-abb9-1ccfae613857.jpg",
     "values": {
-      "heart_rate_value": 153,
-      "humidity_value": 56,
-      "skin_temp_value": 37.6,
-      "spo2_value": 97
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "153",
@@ -77,10 +77,10 @@
   {
     "image_path": "dataset\\1fa563c5-9fb7-483a-99fd-e65914eeeef5.jpg",
     "values": {
-      "heart_rate_value": 158,
-      "humidity_value": 56,
-      "skin_temp_value": 37.6,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "158",
@@ -92,10 +92,10 @@
   {
     "image_path": "dataset\\b5b5d5aa-1e44-452a-b066-29065b3b3efb.jpg",
     "values": {
-      "heart_rate_value": 175,
-      "humidity_value": 60,
-      "skin_temp_value": 36.3,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "175",
@@ -107,10 +107,10 @@
   {
     "image_path": "dataset\\139c5afb-b8d4-4b37-b42c-35fd27f39651.jpg",
     "values": {
-      "heart_rate_value": 176,
-      "humidity_value": 59,
-      "skin_temp_value": 36.2,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "176",
@@ -122,10 +122,10 @@
   {
     "image_path": "dataset\\a657b440-5e78-4b61-a4b8-3654a0445003.jpg",
     "values": {
-      "heart_rate_value": 151,
-      "humidity_value": 77,
-      "skin_temp_value": 35.7,
-      "spo2_value": 91
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "151",
@@ -137,10 +137,10 @@
   {
     "image_path": "dataset\\b6796246-b85e-4dfc-83b3-94bc12c92c07.jpg",
     "values": {
-      "heart_rate_value": 159,
-      "humidity_value": 56,
-      "skin_temp_value": 37.6,
-      "spo2_value": 97
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "159",
@@ -152,10 +152,10 @@
   {
     "image_path": "dataset\\e25a2edc-f388-41e1-a55f-3029fa2529b5.jpg",
     "values": {
-      "heart_rate_value": 175,
-      "humidity_value": 60,
-      "skin_temp_value": 36.3,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "175",
@@ -167,10 +167,10 @@
   {
     "image_path": "dataset\\84c0adf2-b1fd-4eb1-8590-ef6c157e98d7.jpg",
     "values": {
-      "heart_rate_value": 158,
-      "humidity_value": 56,
-      "skin_temp_value": 37.6,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "158",
@@ -182,10 +182,10 @@
   {
     "image_path": "dataset\\1143098b-217e-4e47-9fc5-e6814f15f634.jpg",
     "values": {
-      "heart_rate_value": 175,
-      "humidity_value": 60,
-      "skin_temp_value": 36.3,
-      "spo2_value": 97
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "175",
@@ -197,10 +197,10 @@
   {
     "image_path": "dataset\\8ee46a21-e837-4dea-b476-c17f59fc9321.jpg",
     "values": {
-      "heart_rate_value": 177,
-      "humidity_value": 60,
-      "skin_temp_value": 36.2,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "177",
@@ -212,10 +212,10 @@
   {
     "image_path": "dataset\\608dcb65-bfeb-44d4-aa8d-8d7bf43615b7.jpg",
     "values": {
-      "heart_rate_value": 177,
-      "humidity_value": 60,
-      "skin_temp_value": 36.2,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "177",
@@ -227,10 +227,10 @@
   {
     "image_path": "dataset\\064f47d5-2e9c-477f-97fc-12554d692f25.jpg",
     "values": {
-      "heart_rate_value": 174,
-      "humidity_value": 59,
-      "skin_temp_value": 36.3,
-      "spo2_value": 99
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "174",
@@ -242,10 +242,10 @@
   {
     "image_path": "dataset\\05c3c6ec-ff42-4f80-a038-e09408d343ea.jpg",
     "values": {
-      "heart_rate_value": 150,
-      "humidity_value": 77,
-      "skin_temp_value": 35.8,
-      "spo2_value": 90
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "150",
@@ -257,10 +257,10 @@
   {
     "image_path": "dataset\\12894f0b-5a98-45eb-97aa-7fc3adc6bee0.jpg",
     "values": {
-      "heart_rate_value": 152,
-      "humidity_value": 56,
-      "skin_temp_value": 37.6,
-      "spo2_value": 97
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "152",
@@ -272,10 +272,10 @@
   {
     "image_path": "dataset\\33dfea04-7172-4724-ac0c-a61268c6846e.jpg",
     "values": {
-      "heart_rate_value": 177,
-      "humidity_value": 60,
-      "skin_temp_value": 36.2,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "177",
@@ -287,10 +287,10 @@
   {
     "image_path": "dataset\\361a691d-0cb1-4ebe-a7db-1f06d97c5fc2.jpg",
     "values": {
-      "heart_rate_value": 151,
-      "humidity_value": 56,
-      "skin_temp_value": 37.6,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "151",
@@ -302,10 +302,10 @@
   {
     "image_path": "dataset\\795c1348-0b7f-4af0-b455-c64c30b198da.jpg",
     "values": {
-      "heart_rate_value": 152,
-      "humidity_value": 77,
-      "skin_temp_value": 35.8,
-      "spo2_value": 93
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "152",
@@ -317,10 +317,10 @@
   {
     "image_path": "dataset\\90381837-c4c2-40a7-ba3e-c81330f0062e.jpg",
     "values": {
-      "heart_rate_value": 174,
-      "humidity_value": 59,
-      "skin_temp_value": 36.2,
-      "spo2_value": 96
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "474",
@@ -332,10 +332,10 @@
   {
     "image_path": "dataset\\0594d7e7-f544-4c0d-9c0b-3b20ed245edc.jpg",
     "values": {
-      "heart_rate_value": 152,
-      "humidity_value": 56,
-      "skin_temp_value": 37.6,
-      "spo2_value": 97
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "152",
@@ -347,10 +347,10 @@
   {
     "image_path": "dataset\\8611cba4-c094-4432-aa76-ecb33da1ee7a.jpg",
     "values": {
-      "heart_rate_value": 178,
-      "humidity_value": 60,
-      "skin_temp_value": 36.3,
-      "spo2_value": 98
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "178",
@@ -362,10 +362,10 @@
   {
     "image_path": "dataset\\2e3485a5-af0c-441b-922c-0118fc4de539.jpg",
     "values": {
-      "heart_rate_value": 146,
-      "humidity_value": 77,
-      "skin_temp_value": 35.8,
-      "spo2_value": 91
+      "heart_rate_value": null,
+      "humidity_value": null,
+      "skin_temp_value": null,
+      "spo2_value": null
     },
     "predicted": {
       "heart_rate_value": "146",
