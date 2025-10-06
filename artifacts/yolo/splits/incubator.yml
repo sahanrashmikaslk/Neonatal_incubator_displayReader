@@ -1,0 +1,9 @@
+train: C:\Users\sahan\Desktop\MYProjects\Neonatal_incubator_displayReader\artifacts\yolo\splits\train\images
+val: C:\Users\sahan\Desktop\MYProjects\Neonatal_incubator_displayReader\artifacts\yolo\splits\val\images
+test: C:\Users\sahan\Desktop\MYProjects\Neonatal_incubator_displayReader\artifacts\yolo\splits\test\images
+nc: 4
+names:
+- heart_rate_value
+- humidity_value
+- skin_temp_value
+- spo2_value

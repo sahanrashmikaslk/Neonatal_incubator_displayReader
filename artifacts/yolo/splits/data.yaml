@@ -1,0 +1,10 @@
+names:
+- heart_rate_value
+- humidity_value
+- skin_temp_value
+- spo2_value
+nc: 4
+path: c:\Users\sahan\Desktop\MYProjects\Neonatal_incubator_displayReader\artifacts\yolo\splits
+test: test/images
+train: train/images
+val: val/images

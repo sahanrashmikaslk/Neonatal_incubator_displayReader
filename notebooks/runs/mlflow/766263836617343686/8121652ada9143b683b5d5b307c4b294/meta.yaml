@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Users/sahan/Desktop/MYProjects/Neonatal_incubator_displayReader/notebooks/runs/mlflow/766263836617343686/8121652ada9143b683b5d5b307c4b294/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '766263836617343686'
+lifecycle_stage: active
+run_id: 8121652ada9143b683b5d5b307c4b294
+run_name: yolov8n-incubator
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759728076894
+status: 1
+tags: []
+user_id: sahan
