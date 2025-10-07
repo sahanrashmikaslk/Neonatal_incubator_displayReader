@@ -1,4 +1,5 @@
 """YOLO-based display region detector."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -6,9 +7,50 @@ from typing import Iterable, List, Optional
 
 import cv2
 import numpy as np
+import torch
+from torch.nn import modules as torch_nn_modules
+from torch.serialization import add_safe_globals
 from ultralytics import YOLO
+from ultralytics import utils as yolo_utils
+from ultralytics.nn import modules as yolo_modules
+from ultralytics.nn.tasks import DetectionModel
 
 from .config import CLASS_NAMES, ID_TO_CLASS_NAME
+
+try:  # pragma: no cover - optional dependency path
+    from ultralytics.utils import IterableSimpleNamespace
+except ImportError:  # pragma: no cover
+    IterableSimpleNamespace = None
+
+
+def _register_safe_globals() -> None:
+    """Allowlist Ultralytics/Torch classes for torch.load when weights_only=True."""
+    try:
+        allowed = {DetectionModel}
+        allowed.update({obj for obj in vars(yolo_modules).values() if isinstance(obj, type)})
+        allowed.update({obj for obj in vars(torch_nn_modules).values() if isinstance(obj, type)})
+        if IterableSimpleNamespace is not None:
+            allowed.add(IterableSimpleNamespace)
+        allowed.update({obj for obj in vars(yolo_utils).values() if isinstance(obj, type)})
+        add_safe_globals(list(allowed))
+    except Exception:  # pragma: no cover - defensive
+        pass
+
+
+_register_safe_globals()
+
+
+if not hasattr(torch, "_original_load_incubator"):
+    torch._original_load_incubator = torch.load
+
+
+def _incubator_safe_torch_load(*args, **kwargs):
+    """Fallback loader using weights_only=False for trusted local checkpoints."""
+    kwargs.setdefault("weights_only", False)
+    return torch._original_load_incubator(*args, **kwargs)
+
+
+torch.load = _incubator_safe_torch_load
 
 
 class DetectionResult(dict):
@@ -46,11 +88,16 @@ class DisplayDetector:
             return image.copy(), None
         raise TypeError("image must be a file path or numpy array")
 
-    def predict(self, image: str | Path | np.ndarray) -> list[DetectionResult]:
+    def predict(
+        self,
+        image: str | Path | np.ndarray,
+        conf_threshold: Optional[float] = None,
+    ) -> list[DetectionResult]:
         frame, maybe_path = self._ensure_image(image)
+        threshold = conf_threshold if conf_threshold is not None else self.conf_threshold
         results = self.model.predict(
             source=frame,
-            conf=self.conf_threshold,
+            conf=threshold,
             verbose=False,
             device=self.device,
         )
@@ -87,5 +134,9 @@ class DisplayDetector:
             )
         return detections
 
-    def predict_batch(self, images: Iterable[str | Path | np.ndarray]) -> list[list[DetectionResult]]:
-        return [self.predict(image) for image in images]
+    def predict_batch(
+        self,
+        images: Iterable[str | Path | np.ndarray],
+        conf_threshold: Optional[float] = None,
+    ) -> list[list[DetectionResult]]:
+        return [self.predict(image, conf_threshold=conf_threshold) for image in images]

@@ -67,8 +67,12 @@ class IncubatorDisplayReader:
             enriched.append(det_copy)
         return enriched
 
-    def read(self, image: str | Path | np.ndarray) -> Dict[str, Reading]:
-        detections = self._run_detector(image)
+    def read(
+        self,
+        image: str | Path | np.ndarray,
+        conf: Optional[float] = None,
+    ) -> Dict[str, Reading]:
+        detections = self.detector.predict(image, conf_threshold=conf)
         detections = self._attach_ocr(detections)
         grouped = assemble_parameters(detections)
         readings: Dict[str, Reading] = {}
@@ -85,19 +89,29 @@ class IncubatorDisplayReader:
             )
         return readings
 
-    def read_to_dataframe(self, images: Iterable[str | Path | np.ndarray]) -> pd.DataFrame:
+    def read_to_dataframe(
+        self,
+        images: Iterable[str | Path | np.ndarray],
+        conf: Optional[float] = None,
+    ) -> pd.DataFrame:
         records: List[Dict[str, object]] = []
         for image in images:
-            result = self.read(image)
+            result = self.read(image, conf=conf)
             flat = {f"{k}": v.value for k, v in result.items()}
             conf = {f"{k}_conf": v.ocr_confidence for k, v in result.items()}
             record = {**flat, **conf, "image": str(image)}
             records.append(record)
         return pd.DataFrame(records)
 
-    def annotate_image(self, image: str | Path | np.ndarray, color=(0, 255, 0)) -> np.ndarray:
+    def annotate_image(
+        self,
+        image: str | Path | np.ndarray,
+        conf: Optional[float] = None,
+        readings: Optional[Dict[str, Reading]] = None,
+        color=(0, 255, 0),
+    ) -> np.ndarray:
         frame, _ = DisplayDetector._ensure_image(image)
-        readings = self.read(image)
+        readings = readings or self.read(frame, conf=conf)
         annotated = frame.copy()
         for reading in readings.values():
             bbox = reading.bbox
