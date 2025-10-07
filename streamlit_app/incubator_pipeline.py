@@ -64,8 +64,8 @@ BOX_COLOR_NUMERIC = (60, 170, 255)  # soft orange for numeric classes
 BOX_COLOR_OTHER = (120, 200, 80)  # green for non-numeric
 BOX_THICKNESS = 2
 FONT = cv2.FONT_HERSHEY_DUPLEX
-FONT_SCALE = 0.7
-FONT_THICKNESS = 2
+FONT_SCALE = 0.4
+FONT_THICKNESS = 1
 
 
 @dataclass

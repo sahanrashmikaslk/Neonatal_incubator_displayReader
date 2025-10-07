@@ -125,9 +125,9 @@ class IncubatorDisplayReader:
                 label,
                 (x1, max(10, y1 - 10)),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.7,
+                0.25,
                 color,
-                2,
+                1,
                 cv2.LINE_AA,
             )
         return annotated
