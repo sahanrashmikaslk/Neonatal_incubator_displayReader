@@ -1,5 +1,6 @@
 import io
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
@@ -11,6 +12,25 @@ import streamlit as st
 from PIL import Image
 
 from incubator_pipeline import DEFAULT_WEIGHTS_PATH, IncubatorDisplayReader
+
+# Import postprocessing for validation
+try:
+    from incubator_pipeline.postprocessing import (
+        VALUE_RANGES,
+        apply_postprocessing,
+        format_display_value,
+        get_validation_status_emoji
+    )
+    POSTPROCESSING_AVAILABLE = True
+except ImportError:
+    POSTPROCESSING_AVAILABLE = False
+    VALUE_RANGES = {}
+    def apply_postprocessing(readings, use_previous=False, previous_valid=None):
+        return readings, {}
+    def format_display_value(param, value):
+        return str(value) if value else "N/A"
+    def get_validation_status_emoji(status):
+        return ""
 
 st.set_page_config(
     page_title="Incubator Display Dashboard",
@@ -54,6 +74,8 @@ weights_path = st.sidebar.text_input(
     value=str(Path(DEFAULT_WEIGHTS_PATH)),
 )
 conf_threshold = st.sidebar.slider("Detection confidence", 0.1, 0.9, 0.25, 0.05)
+ocr_conf_threshold = st.sidebar.slider("OCR confidence filter", 0.0, 0.9, 0.3, 0.05, 
+                                        help="Minimum OCR confidence for validation")
 
 st.sidebar.divider()
 st.sidebar.header("📹 Camera Settings")
@@ -134,11 +156,49 @@ tab1, tab2, tab3 = st.tabs(["📷 Upload Images", "🎥 Live Webcam (OpenCV)", "
 
 session_records = st.session_state.setdefault("records", [])
 
+# Session state for validation tracking
+if 'validated_records' not in st.session_state:
+    st.session_state.validated_records = []
+if 'previous_valid' not in st.session_state:
+    st.session_state.previous_valid = {}
+if 'latest_validated' not in st.session_state:
+    st.session_state.latest_validated = {}
+
+def validate_and_format_readings(readings, ocr_threshold, use_temporal_smoothing=True):
+    """Process readings through validation and return formatted results."""
+    if not POSTPROCESSING_AVAILABLE:
+        return readings, {}
+    
+    # Convert readings to dict format for postprocessing
+    readings_dict = {}
+    for key, reading in readings.items():
+        if reading.ocr_confidence and reading.ocr_confidence >= ocr_threshold:
+            readings_dict[key] = {
+                'value': reading.value,
+                'detection_confidence': reading.detection_confidence,
+                'ocr_confidence': reading.ocr_confidence
+            }
+    
+    # Apply validation with temporal smoothing if enabled
+    validated, validation_log = apply_postprocessing(
+        readings_dict,
+        use_previous_on_invalid=use_temporal_smoothing,
+        previous_valid_readings=st.session_state.previous_valid if use_temporal_smoothing else None
+    )
+    
+    # Update previous valid for next frame
+    if use_temporal_smoothing:
+        for key, val_data in validated.items():
+            if val_data.get('status') == 'valid':
+                st.session_state.previous_valid[key] = val_data
+    
+    return validated, validation_log
+
 def process_image(image_array: np.ndarray, label: str) -> Dict[str, object]:
     readings = reader.read(image_array, conf=conf_threshold)
     annotated = reader.annotate_image(image_array, conf=conf_threshold)
     rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-    st.image(rgb, caption=f"{label} (annotated)", use_column_width=True)
+    st.image(rgb, caption=f"{label} (annotated)", use_container_width=True)
     data = {
         "image": label,
     }
@@ -236,14 +296,14 @@ with tab2:
                         try:
                             annotated = reader.annotate_image(frame, conf=conf_threshold)
                             rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-                            frame_placeholder.image(rgb, channels="RGB", use_column_width=True)
+                            frame_placeholder.image(rgb, channels="RGB", use_container_width=True)
                             
                             # Store current frame for capture
                             st.session_state.current_frame = frame.copy()
                         except Exception as e:
                             st.error(f"Error processing frame: {e}")
                             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                            frame_placeholder.image(rgb, channels="RGB", use_column_width=True)
+                            frame_placeholder.image(rgb, channels="RGB", use_container_width=True)
                     
                     # Check if stop button was pressed
                     if not st.session_state.webcam_active:
@@ -256,60 +316,127 @@ with tab2:
         # Capture button (outside the loop)
         if 'current_frame' in st.session_state:
             if capture_button_placeholder.button("📸 Capture Current Frame", type="primary", use_container_width=True):
-                timestamp = time.strftime("%Y%m%d_%H%M%S")
-                label = f"webcam_capture_{timestamp}"
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                label = f"webcam_capture_{time.strftime('%Y%m%d_%H%M%S')}"
                 
                 try:
-                    readings = reader.read(st.session_state.current_frame, conf=conf_threshold)
+                    # Use already validated readings from session state
+                    validated = st.session_state.latest_validated
                     
-                    data = {
-                        "image": label,
-                    }
-                    for key, reading in readings.items():
-                        data[key] = reading.value
-                        data[f"{key}_det_conf"] = reading.detection_confidence
-                        data[f"{key}_ocr_conf"] = reading.ocr_confidence
-                    
-                    session_records.append(data)
-                    st.success(f"✅ Frame captured at {timestamp}")
+                    if validated:
+                        data = {
+                            "timestamp": timestamp,
+                            "image": label,
+                        }
+                        
+                        for key, val_data in validated.items():
+                            value = val_data.get('value', 'N/A')
+                            data[key] = value
+                            data[f"{key}_status"] = val_data.get('status', 'unknown')
+                            data[f"{key}_det_conf"] = val_data.get('detection_confidence', 0)
+                            data[f"{key}_ocr_conf"] = val_data.get('ocr_confidence', 0)
+                        
+                        st.session_state.validated_records.append(data)
+                        session_records.append(data)
+                        st.success(f"✅ Validated frame captured at {timestamp}")
+                    else:
+                        st.warning("No validated readings to capture")
                 except Exception as e:
                     st.error(f"Error capturing frame: {e}")
     
     with col_right:
-        st.subheader("Live Readings")
+        st.subheader("Live Validated Readings")
         
         if 'current_frame' in st.session_state and st.session_state.webcam_active:
             try:
                 readings = reader.read(st.session_state.current_frame, conf=conf_threshold)
                 
-                readings_df = []
-                for key, reading in readings.items():
-                    readings_df.append({
-                        "Parameter": key.replace("_", " ").title(),
-                        "Value": reading.value if reading.value else "N/A",
-                        "Det Conf": f"{reading.detection_confidence:.2f}",
-                        "OCR Conf": f"{reading.ocr_confidence:.2f}" if reading.ocr_confidence else "N/A"
-                    })
+                # Apply validation
+                validated, validation_log = validate_and_format_readings(
+                    readings, 
+                    ocr_conf_threshold,
+                    use_temporal_smoothing=True
+                )
                 
-                if readings_df:
-                    st.dataframe(pd.DataFrame(readings_df), use_container_width=True, hide_index=True)
+                # Store latest validated readings
+                st.session_state.latest_validated = validated
+                
+                # Create validated readings table
+                if validated:
+                    readings_df = []
+                    for key, val_data in validated.items():
+                        status = val_data.get('status', 'unknown')
+                        emoji = get_validation_status_emoji(status)
+                        value = val_data.get('value', 'N/A')
+                        formatted_value = format_display_value(key, value) if value != 'N/A' else 'N/A'
+                        
+                        readings_df.append({
+                            "Status": emoji,
+                            "Parameter": key.replace("_", " ").title(),
+                            "Value": formatted_value,
+                            "Det Conf": f"{val_data.get('detection_confidence', 0):.2f}",
+                            "OCR Conf": f"{val_data.get('ocr_confidence', 0):.2f}"
+                        })
+                    
+                    df = pd.DataFrame(readings_df)
+                    st.dataframe(df, use_container_width=True, hide_index=True)
+                    
+                    # Show validation details in expander
+                    if validation_log:
+                        with st.expander("📋 Validation Details"):
+                            for param, log in validation_log.items():
+                                st.text(f"{param}: {log}")
                 else:
-                    st.info("No detections in current frame")
-            except:
-                st.info("Waiting for frames...")
+                    st.info("No validated readings (check OCR confidence threshold)")
+            except Exception as e:
+                st.info(f"Waiting for frames... {str(e) if st.session_state.get('debug') else ''}")
         else:
-            st.info("Start webcam to see live readings")
+            st.info("Start webcam to see live validated readings")
         
-        st.subheader("Captured Frames Log")
-        if st.session_state["records"]:
-            webcam_records = [r for r in st.session_state["records"] if "webcam_capture" in r.get("image", "")]
-            if webcam_records:
-                df = pd.DataFrame(webcam_records)
-                st.dataframe(df, use_container_width=True)
-            else:
-                st.info("No frames captured yet")
+        st.subheader("📊 Captured Validated Data")
+        
+        if st.session_state.validated_records:
+            validated_df = pd.DataFrame(st.session_state.validated_records)
+            st.dataframe(validated_df, use_container_width=True, height=300)
+            
+            # Excel Download button
+            try:
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    validated_df.to_excel(writer, index=False, sheet_name='Validated Readings')
+                    
+                    # Add summary sheet
+                    summary_data = []
+                    for col in validated_df.columns:
+                        if col.endswith('_status'):
+                            param = col.replace('_status', '')
+                            if param in validated_df.columns:
+                                valid_count = (validated_df[col] == 'valid').sum()
+                                total_count = validated_df[col].notna().sum()
+                                summary_data.append({
+                                    'Parameter': param,
+                                    'Valid': valid_count,
+                                    'Total': total_count,
+                                    'Valid %': f"{(valid_count/total_count*100):.1f}%" if total_count > 0 else "N/A"
+                                })
+                    
+                    if summary_data:
+                        summary_df = pd.DataFrame(summary_data)
+                        summary_df.to_excel(writer, index=False, sheet_name='Summary')
+                
+                excel_data = output.getvalue()
+                
+                st.download_button(
+                    label="📥 Download Excel",
+                    data=excel_data,
+                    file_name=f"incubator_validated_{time.strftime('%Y%m%d_%H%M%S')}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error(f"Error creating Excel: {e}")
         else:
-            st.info("No frames captured yet")
+            st.info("No validated frames captured yet. Click 'Capture Current Frame' to start logging data.")
 
 # Tab 3: Batch Processing
 with tab3:
@@ -357,17 +484,59 @@ if st.session_state["records"]:
     with col2:
         st.metric("Total Records", len(df))
         
-        # Download button
+        # CSV Download button
         export_csv = st.download_button(
-            label="📥 Download All Data (CSV)",
+            label="📥 Download CSV",
             data=df.to_csv(index=False).encode("utf-8"),
-            file_name="incubator_readings.csv",
+            file_name=f"incubator_readings_{time.strftime('%Y%m%d_%H%M%S')}.csv",
             mime="text/csv",
         )
+        
+        # Excel Download button
+        if st.session_state.validated_records:
+            try:
+                # Create Excel file in memory
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    validated_df = pd.DataFrame(st.session_state.validated_records)
+                    validated_df.to_excel(writer, index=False, sheet_name='Validated Readings')
+                    
+                    # Add a summary sheet if available
+                    if not validated_df.empty:
+                        summary_data = []
+                        for col in validated_df.columns:
+                            if col.endswith('_status'):
+                                param = col.replace('_status', '')
+                                if param in validated_df.columns:
+                                    valid_count = (validated_df[col] == 'valid').sum()
+                                    total_count = validated_df[col].notna().sum()
+                                    summary_data.append({
+                                        'Parameter': param,
+                                        'Valid': valid_count,
+                                        'Total': total_count,
+                                        'Valid %': f"{(valid_count/total_count*100):.1f}%" if total_count > 0 else "N/A"
+                                    })
+                        
+                        if summary_data:
+                            summary_df = pd.DataFrame(summary_data)
+                            summary_df.to_excel(writer, index=False, sheet_name='Summary')
+                
+                excel_data = output.getvalue()
+                
+                st.download_button(
+                    label="📊 Download Excel",
+                    data=excel_data,
+                    file_name=f"incubator_validated_{time.strftime('%Y%m%d_%H%M%S')}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            except Exception as e:
+                st.error(f"Error creating Excel file: {e}")
         
         # Clear data button
         if st.button("🗑️ Clear All Data", type="secondary"):
             st.session_state["records"] = []
+            st.session_state["validated_records"] = []
+            st.session_state["previous_valid"] = {}
             st.rerun()
     
     # Confidence distributions
