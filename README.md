@@ -4,7 +4,7 @@ An automated system for detecting and reading neonatal incubator display values 
 
 ---
 
-## 📑 Table of Contents
+##  Table of Contents
 
 1. [System Architecture](#-system-architecture)
 2. [Features](#-features)
@@ -26,54 +26,13 @@ An automated system for detecting and reading neonatal incubator display values 
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
-```mermaid
-graph TB
-    subgraph "Data Preparation"
-        A[Raw Images] --> B[Label Studio Annotation]
-        B --> C[ground_truth.json]
-    end
-
-    subgraph "Training Pipeline"
-        C --> D[YOLO Format Conversion]
-        D --> E[Train/Val Split 80/20]
-        E --> F[YOLOv8n Training]
-        F --> G[Model Evaluation]
-        G --> H[Best Model: incubator_yolov8n.pt]
-    end
-
-    subgraph "Inference Pipeline"
-        I[Input: Image/Video] --> J[YOLOv8 Detection]
-        H --> J
-        J --> K[Bounding Box Extraction]
-        K --> L[EasyOCR Text Recognition]
-        L --> M[Raw OCR Results]
-    end
-
-    subgraph "Post-Processing"
-        M --> N[Medical Range Validation]
-        N --> O[Decimal Correction]
-        O --> P[Temporal Smoothing]
-        P --> Q[Confidence Filtering]
-        Q --> R[Final Validated Output]
-    end
-
-    subgraph "Output & Visualization"
-        R --> S[Streamlit Dashboard]
-        R --> T[CSV Export]
-        R --> U[Annotated Images]
-    end
-
-    style A fill:#e1f5ff
-    style H fill:#c8e6c9
-    style R fill:#fff9c4
-    style S fill:#f8bbd0
-```
+![System Architecture](screenshots/systemArchitecture.png)
 
 ---
 
-## 🚀 Features
+##  Features
 
 ### Core Capabilities
 
@@ -90,6 +49,9 @@ graph TB
 
 ### Detected Parameters
 
+![Dataset](dataset/2abcd4b1-801e-4a92-a8a6-59eb24ba66ea.jpg)
+
+
 | Parameter            | Valid Range | Unit | Type              |
 | -------------------- | ----------- | ---- | ----------------- |
 | **Heart Rate**       | 60-220      | bpm  | Integer           |
@@ -99,7 +61,7 @@ graph TB
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 Neonatal_incubator_displayReader/
@@ -130,7 +92,7 @@ Neonatal_incubator_displayReader/
 
 ---
 
-## 📥 Installation
+##  Installation
 
 ### Prerequisites
 
@@ -170,7 +132,7 @@ python -c "import easyocr; print('EasyOCR OK')"             # Check OCR
 
 ---
 
-## ⚡ Quick Start
+##  Quick Start
 
 ### Option 1: Use Pre-trained Model (Inference Only)
 
@@ -232,29 +194,12 @@ print(f"SpO2: {results['spo2_value']['validated_value']}%")
 
 ---
 
-## 🔄 Pipeline Workflows
+## Pipeline Workflows
 
 ### Overall Training Workflow
 
 ```mermaid
-flowchart TD
-    Start([Start]) --> A[Collect Raw Images]
-    A --> B[Launch Label Studio]
-    B --> C[Annotate Bounding Boxes]
-    C --> D[Export to ground_truth.json]
-    D --> E[Convert to YOLO Format]
-    E --> F[Train/Val Split]
-    F --> G[Train YOLOv8n Model]
-    G --> H{Validation mAP > 0.9?}
-    H -->|No| I[Adjust Hyperparameters]
-    I --> G
-    H -->|Yes| J[Save Best Model]
-    J --> K[Evaluate on Test Set]
-    K --> L([End: Model Ready])
 
-    style Start fill:#e1f5ff
-    style L fill:#c8e6c9
-    style H fill:#fff9c4
 ```
 
 ### Inference & Post-Processing Workflow
