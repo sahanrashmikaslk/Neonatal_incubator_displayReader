@@ -1,35 +1,6 @@
 # Neonatal Incubator Display Reader
 
 An automated system for detecting and reading neonatal incubator display values using **YOLOv8** for object detection and **EasyOCR** for optical character recognition. The system includes medical validation, post-processing, and live webcam support for real-time monitoring.
-
----
-
-##  Table of Contents
-
-1. [System Architecture](#-system-architecture)
-2. [Features](#-features)
-3. [Project Structure](#-project-structure)
-4. [Installation](#-installation)
-5. [Quick Start](#-quick-start)
-6. [Pipeline Workflows](#-pipeline-workflows)
-7. [Training Pipeline](#-training-pipeline)
-8. [Inference & Detection](#-inference--detection)
-9. [Post-Processing & Validation](#-post-processing--validation)
-10. [Streamlit Dashboard](#-streamlit-dashboard)
-11. [Live Webcam Support](#-live-webcam-support)
-12. [Camera Switcher Guide](#-camera-switcher-guide)
-13. [API Reference](#-api-reference)
-14. [Testing](#-testing)
-15. [Troubleshooting](#-troubleshooting)
-16. [Performance Optimization](#-performance-optimization)
-17. [Model Performance](#-model-performance)
-
----
-
-##  System Architecture
-
-![System Architecture](screenshots/systemArchitecture.png)
-
 ---
 
 ##  Features
