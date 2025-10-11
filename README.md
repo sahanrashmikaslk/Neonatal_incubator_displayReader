@@ -1,23 +1,34 @@
 # Neonatal Incubator Display Reader
 
-Automated system for detecting and reading neonatal incubator display values using **YOLOv8** object detection and **Tesseract OCR** with medical-grade validation and real-time monitoring.
-
-[![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
-[![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-green.svg)](https://github.com/ultralytics/ultralytics)
-[![Tesseract](https://img.shields.io/badge/Tesseract-OCR-orange.svg)](https://github.com/tesseract-ocr/tesseract)
+An automated system for detecting and reading neonatal incubator display values using **YOLOv8** for object detection and **EasyOCR** for optical character recognition. The system includes medical validation, post-processing, and live webcam support for real-time monitoring.
 
 ---
 
-## Table of Contents
+##  Table of Contents
 
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Performance Optimization](#performance-optimization)
-- [Validation & Post-Processing](#validation--post-processing)
-- [Troubleshooting](#troubleshooting)
-- [API Reference](#api-reference)
+1. [System Architecture](#-system-architecture)
+2. [Features](#-features)
+3. [Project Structure](#-project-structure)
+4. [Installation](#-installation)
+5. [Quick Start](#-quick-start)
+6. [Pipeline Workflows](#-pipeline-workflows)
+7. [Training Pipeline](#-training-pipeline)
+8. [Inference & Detection](#-inference--detection)
+9. [Post-Processing & Validation](#-post-processing--validation)
+10. [Streamlit Dashboard](#-streamlit-dashboard)
+11. [Live Webcam Support](#-live-webcam-support)
+12. [Camera Switcher Guide](#-camera-switcher-guide)
+13. [API Reference](#-api-reference)
+14. [Testing](#-testing)
+15. [Troubleshooting](#-troubleshooting)
+16. [Performance Optimization](#-performance-optimization)
+17. [Model Performance](#-model-performance)
+
+---
+
+##  System Architecture
+
+![System Architecture](screenshots/systemArchitecture.png)
 
 ---
 
