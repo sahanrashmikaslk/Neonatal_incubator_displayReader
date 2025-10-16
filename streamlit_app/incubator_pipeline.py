@@ -10,8 +10,9 @@ import cv2
 import numpy as np
 import re
 import warnings
-import easyocr
 import torch
+import pytesseract
+from PIL import Image
 from torch.serialization import add_safe_globals
 from ultralytics import YOLO
 from ultralytics.nn.tasks import DetectionModel
@@ -80,13 +81,17 @@ class Reading:
 class IncubatorDisplayReader:
     """Main class for detecting and reading incubator display values."""
     
-    def __init__(self, weights_path: str = None, conf_threshold: float = 0.25):
+    def __init__(self, weights_path: str = None, conf_threshold: float = 0.25, fast_mode: bool = True, 
+                 use_half_precision: bool = False, cache_preprocessed: bool = True):
         """
-        Initialize the reader with YOLO detector and EasyOCR.
+        Initialize the reader with YOLO detector and Tesseract OCR.
         
         Args:
             weights_path: Path to YOLO weights file
             conf_threshold: Detection confidence threshold
+            fast_mode: If True, use fast OCR (1 strategy). If False, use accurate OCR (15 strategies)
+            use_half_precision: Use FP16 for faster inference (requires CUDA)
+            cache_preprocessed: Cache preprocessed ROIs to avoid redundant processing
         """
         if weights_path is None:
             weights_path = DEFAULT_WEIGHTS_PATH
@@ -98,41 +103,234 @@ class IncubatorDisplayReader:
         # Load YOLO detector
         self.detector = YOLO(str(weights_path))
         self.conf_threshold = conf_threshold
+        self.fast_mode = fast_mode
+        self.use_half_precision = use_half_precision
+        self.cache_preprocessed = cache_preprocessed
         
-        # Initialize EasyOCR reader
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.reader = easyocr.Reader(['en'], gpu=torch.cuda.is_available())
+        # ROI cache for avoiding redundant preprocessing
+        self._roi_cache = {} if cache_preprocessed else None
+        self._cache_max_size = 100
+        
+        # Check if Tesseract is available
+        self.tesseract_available = self._check_tesseract()
+        if not self.tesseract_available:
+            warnings.warn("Tesseract OCR not found. Please install Tesseract: https://github.com/UB-Mannheim/tesseract/wiki")
     
-    def preprocess_roi(self, roi: np.ndarray) -> np.ndarray:
-        """Preprocess ROI for better OCR accuracy."""
-        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        gray = cv2.equalizeHist(gray)
-        blur = cv2.GaussianBlur(gray, (3, 3), 0)
-        return cv2.resize(blur, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
+    def _check_tesseract(self) -> bool:
+        """Check if Tesseract OCR is available."""
+        try:
+            pytesseract.get_tesseract_version()
+            return True
+        except:
+            return False
     
-    def clean_numeric(self, text: str) -> str:
-        """Clean OCR text to extract numeric values."""
-        cleaned = re.sub(r'[^0-9.%]', '', text)
-        cleaned = cleaned.replace('..', '.')
-        return cleaned.strip('.')
+    def preprocess_roi_tesseract_advanced(self, roi: np.ndarray):
+        """
+        Advanced multi-strategy preprocessing for LCD/LED displays.
+        Returns multiple preprocessing variants to try with Tesseract.
+        """
+        if roi.size == 0 or roi is None:
+            return []
+        
+        # Convert to grayscale
+        if len(roi.shape) == 3:
+            gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = roi.copy()
+        
+        variants = []
+        
+        # Strategy 1: Extreme upscaling + CLAHE + Bilateral + Adaptive Threshold
+        try:
+            huge = cv2.resize(gray, None, fx=8.0, fy=8.0, interpolation=cv2.INTER_CUBIC)
+            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+            huge = clahe.apply(huge)
+            huge = cv2.bilateralFilter(huge, 9, 75, 75)
+            thresh = cv2.adaptiveThreshold(huge, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                           cv2.THRESH_BINARY, 11, 2)
+            variants.append(('adaptive', thresh))
+        except:
+            pass
+        
+        # Strategy 2: Otsu's thresholding
+        try:
+            huge = cv2.resize(gray, None, fx=8.0, fy=8.0, interpolation=cv2.INTER_CUBIC)
+            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+            huge = clahe.apply(huge)
+            blur = cv2.GaussianBlur(huge, (5, 5), 0)
+            _, otsu = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            variants.append(('otsu', otsu))
+        except:
+            pass
+        
+        # Strategy 3: Inverted Otsu
+        try:
+            huge = cv2.resize(gray, None, fx=8.0, fy=8.0, interpolation=cv2.INTER_CUBIC)
+            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+            huge = clahe.apply(huge)
+            blur = cv2.GaussianBlur(huge, (5, 5), 0)
+            _, otsu = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            variants.append(('inverted', otsu))
+        except:
+            pass
+        
+        # Strategy 4: Morphological operations
+        try:
+            huge = cv2.resize(gray, None, fx=8.0, fy=8.0, interpolation=cv2.INTER_CUBIC)
+            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+            huge = clahe.apply(huge)
+            _, binary = cv2.threshold(huge, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+            dilated = cv2.dilate(binary, kernel, iterations=1)
+            variants.append(('dilated', dilated))
+        except:
+            pass
+        
+        # Strategy 5: Sharpening
+        try:
+            huge = cv2.resize(gray, None, fx=8.0, fy=8.0, interpolation=cv2.INTER_CUBIC)
+            kernel_sharpen = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
+            sharpened = cv2.filter2D(huge, -1, kernel_sharpen)
+            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+            sharpened = clahe.apply(sharpened)
+            _, binary = cv2.threshold(sharpened, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            variants.append(('sharpened', binary))
+        except:
+            pass
+        
+        return variants
+    
+    def _compute_roi_hash(self, roi: np.ndarray) -> str:
+        """Compute a hash of the ROI for caching."""
+        # Use downsampled ROI for faster hash computation
+        small = cv2.resize(roi, (32, 32))
+        return hash(small.tobytes())
+    
+    def extract_value_fast(self, roi: np.ndarray) -> Tuple[Optional[str], float]:
+        """
+        Fast OCR extraction using only the best preprocessing strategy.
+        Optimized for real-time webcam processing with optional caching.
+        """
+        if not self.tesseract_available:
+            return None, 0.0
+        
+        if roi is None or roi.size == 0:
+            return None, 0.0
+        
+        # Check cache if enabled
+        if self.cache_preprocessed:
+            roi_hash = self._compute_roi_hash(roi)
+            if roi_hash in self._roi_cache:
+                return self._roi_cache[roi_hash]
+        
+        # Convert to grayscale
+        if len(roi.shape) == 3:
+            gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = roi.copy()
+        
+        # Single best strategy: 8x upscale + CLAHE + Otsu (optimized)
+        try:
+            # Use 6x instead of 8x for faster processing (still good quality)
+            huge = cv2.resize(gray, None, fx=6.0, fy=6.0, interpolation=cv2.INTER_CUBIC)
+            clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+            huge = clahe.apply(huge)
+            # Reduce Gaussian blur kernel for speed
+            blur = cv2.GaussianBlur(huge, (3, 3), 0)
+            _, processed = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            
+            pil_image = Image.fromarray(processed)
+            
+            # Optimized Tesseract config: PSM 7, OEM 3, whitelist
+            config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789.'
+            
+            # Extract text (single call, no data fetch)
+            text = pytesseract.image_to_string(pil_image, config=config)
+            text = text.strip().replace(' ', '').replace('\n', '').replace('..', '.').strip('.')
+            
+            # Get confidence only if we have text
+            if text and any(c.isdigit() for c in text):
+                data = pytesseract.image_to_data(pil_image, config=config, 
+                                                 output_type=pytesseract.Output.DICT)
+                confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]
+                avg_confidence = sum(confidences) / len(confidences) if confidences else 50
+            else:
+                avg_confidence = 0
+            
+            result = (text if text and any(c.isdigit() for c in text) else None, avg_confidence / 100.0)
+            
+            # Cache result if enabled
+            if self.cache_preprocessed and result[0] is not None:
+                # Manage cache size
+                if len(self._roi_cache) >= self._cache_max_size:
+                    # Remove oldest entry (simple FIFO)
+                    self._roi_cache.pop(next(iter(self._roi_cache)))
+                self._roi_cache[roi_hash] = result
+            
+            return result
+            
+        except:
+            pass
+        
+        return None, 0.0
     
     def extract_value(self, roi: np.ndarray) -> Tuple[Optional[str], float]:
-        """Extract numeric value from ROI using OCR."""
-        if roi.size == 0:
+        """
+        Extract numeric value using advanced Tesseract OCR with multiple preprocessing strategies.
+        Use this for batch processing or when accuracy is more important than speed.
+        """
+        if not self.tesseract_available:
             return None, 0.0
         
-        processed = self.preprocess_roi(roi)
-        results = self.reader.readtext(processed, detail=1)
-        
-        if not results:
+        if roi is None or roi.size == 0:
             return None, 0.0
         
-        best = max(results, key=lambda x: x[2])
-        _, raw_text, confidence = best
-        text = self.clean_numeric(raw_text)
+        # Get multiple preprocessing variants
+        variants = self.preprocess_roi_tesseract_advanced(roi)
         
-        return text or None, float(confidence)
+        if not variants:
+            return None, 0.0
+        
+        # Try different PSM modes
+        psm_modes = [
+            ('psm7', r'--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789.'),
+            ('psm8', r'--oem 3 --psm 8 -c tessedit_char_whitelist=0123456789.'),
+            ('psm13', r'--oem 3 --psm 13 -c tessedit_char_whitelist=0123456789.'),
+        ]
+        
+        best_result = None
+        best_conf = 0.0
+        
+        # Try all combinations
+        for variant_name, processed in variants:
+            pil_image = Image.fromarray(processed)
+            
+            for psm_name, config in psm_modes:
+                try:
+                    # Extract text
+                    text = pytesseract.image_to_string(pil_image, config=config)
+                    text = text.strip().replace(' ', '').replace('\n', '')
+                    
+                    # Get confidence
+                    data = pytesseract.image_to_data(pil_image, config=config, 
+                                                     output_type=pytesseract.Output.DICT)
+                    confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]
+                    avg_confidence = sum(confidences) / len(confidences) if confidences else 0
+                    
+                    # Clean text
+                    if text:
+                        text = text.replace('..', '.')
+                        text = text.strip('.')
+                        
+                        # Only consider if we got numeric text
+                        if text and any(c.isdigit() for c in text):
+                            if avg_confidence > best_conf:
+                                best_result = text
+                                best_conf = avg_confidence
+                except:
+                    continue
+        
+        return best_result, best_conf / 100.0
     
     def read(self, image: np.ndarray, conf: float = None) -> Dict[str, Reading]:
         """
@@ -147,7 +345,19 @@ class IncubatorDisplayReader:
         """
         if conf is None:
             conf = self.conf_threshold
-        results = self.detector.predict(source=image, conf=conf, verbose=False)
+        
+        # Optimized YOLO prediction settings
+        results = self.detector.predict(
+            source=image, 
+            conf=conf, 
+            verbose=False,
+            half=self.use_half_precision,  # Use FP16 if enabled
+            device='cuda' if self.use_half_precision else None,  # Use GPU if half precision
+            imgsz=640,  # Standard size for speed
+            augment=False,  # Disable augmentation for speed
+            agnostic_nms=False,  # Faster NMS
+            max_det=10  # Limit max detections for speed
+        )
         det = results[0]
         
         outputs = {}
@@ -168,7 +378,11 @@ class IncubatorDisplayReader:
             roi = image[y1:y2, x1:x2]
             
             if name in NUMERIC_CLASSES and roi.size != 0:
-                value, ocr_conf = self.extract_value(roi)
+                # Use fast or accurate mode based on initialization
+                if self.fast_mode:
+                    value, ocr_conf = self.extract_value_fast(roi)
+                else:
+                    value, ocr_conf = self.extract_value(roi)
                 outputs[name] = Reading(
                     value=value,
                     detection_confidence=float(score),
