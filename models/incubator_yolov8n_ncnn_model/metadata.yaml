@@ -1,0 +1,21 @@
+description: Ultralytics incubator_YOLOv8n model trained on c:\Users\sahan\Desktop\MYProjects\Neonatal_incubator_displayReader\artifacts\yolo\splits\data.yaml
+author: Ultralytics
+date: '2025-10-13T10:40:33.927177'
+version: 8.3.213
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: heart_rate_value
+  1: humidity_value
+  2: skin_temp_value
+  3: spo2_value
+args:
+  batch: 1
+  half: false
+channels: 3
