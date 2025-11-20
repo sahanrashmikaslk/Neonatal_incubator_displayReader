@@ -47,10 +47,11 @@ if not hasattr(np, "_no_nep50_warning"):
 # Default paths
 PROJECT_DIR = Path(__file__).parent.parent
 MODEL_DIR = PROJECT_DIR / 'models'
-DEFAULT_WEIGHTS_PATH = MODEL_DIR / 'incubator_yolov8n.pt'
+DEFAULT_WEIGHTS_PATH = MODEL_DIR / 'incubator_yolov8n_v4.pt'
 
 # Class configuration
 CLASS_NAMES = [
+    'air_temp_value',
     'heart_rate_value',
     'humidity_value',
     'skin_temp_value',
@@ -63,10 +64,11 @@ NUMERIC_CLASSES = [c for c in CLASS_NAMES if c.endswith('value')]
 TEXT_COLOR = (255, 255, 255)  # white
 BOX_COLOR_NUMERIC = (60, 170, 255)  # soft orange for numeric classes
 BOX_COLOR_OTHER = (120, 200, 80)  # green for non-numeric
-BOX_THICKNESS = 2
-FONT = cv2.FONT_HERSHEY_DUPLEX
-FONT_SCALE = 0.4
+BOX_THICKNESS = 1  # Thinner boxes (was 2)
+FONT = cv2.FONT_HERSHEY_SIMPLEX  # Simpler font for smaller labels
+FONT_SCALE = 0.3  # Smaller font (was 0.4)
 FONT_THICKNESS = 1
+LABEL_ALPHA = 0.6  # Transparency for label background (0.0-1.0)
 
 
 @dataclass
@@ -399,15 +401,22 @@ class IncubatorDisplayReader:
         return outputs
     
     def draw_label(self, image: np.ndarray, text: str, anchor: Tuple[int, int], color: Tuple[int, int, int]):
-        """Draw label with background on image."""
+        """Draw label with semi-transparent background on image."""
         x, y = anchor
         text = text if text else ""
         (text_w, text_h), baseline = cv2.getTextSize(text, FONT, FONT_SCALE, FONT_THICKNESS)
-        pad = 6
+        pad = 3  # Smaller padding (was 6)
         y = max(y, text_h + pad)
         top_left = (x, y - text_h - pad)
         bottom_right = (x + text_w + 2 * pad, y + baseline)
-        cv2.rectangle(image, top_left, bottom_right, color, thickness=-1)
+        
+        # Create semi-transparent background using alpha blending
+        overlay = image.copy()
+        cv2.rectangle(overlay, top_left, bottom_right, color, thickness=-1)
+        # Apply transparency
+        cv2.addWeighted(overlay, LABEL_ALPHA, image, 1 - LABEL_ALPHA, 0, image)
+        
+        # Draw text on top
         text_org = (x + pad, y - pad)
         cv2.putText(image, text, text_org, FONT, FONT_SCALE, TEXT_COLOR, FONT_THICKNESS, cv2.LINE_AA)
     
@@ -427,7 +436,10 @@ class IncubatorDisplayReader:
             conf = self.conf_threshold
         readings = self.read(image, conf=conf)
         
-        for name, reading in readings.items():
+        # Sort by y-coordinate to handle label positioning better
+        sorted_readings = sorted(readings.items(), key=lambda x: x[1].bbox[1] if x[1].bbox else 0)
+        
+        for name, reading in sorted_readings:
             if reading.bbox is None:
                 continue
             
@@ -437,8 +449,16 @@ class IncubatorDisplayReader:
             # Draw bounding box
             cv2.rectangle(annotated, (x1, y1), (x2, y2), color, BOX_THICKNESS)
             
-            # Draw label
-            label_text = f"{name}: {reading.value}" if reading.value else name
-            self.draw_label(annotated, label_text, (x1, y1 - 8), color)
+            # Create shorter label text to reduce overlap
+            param_short = name.replace('_value', '').replace('_', ' ').title()
+            label_text = f"{param_short}: {reading.value}" if reading.value else param_short
+            
+            # Position label above box, with small offset
+            label_y = y1 - 5
+            # If label would be off screen, put it inside the box at the top
+            if label_y < 15:
+                label_y = y1 + 12
+            
+            self.draw_label(annotated, label_text, (x1, label_y), color)
         
         return annotated

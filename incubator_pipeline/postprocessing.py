@@ -43,7 +43,15 @@ VALUE_RANGES = {
         'unit': '%',
         'description': 'SpO2',
         'integer_only': True  # SpO2 is always an integer
-    }
+    },
+    'air_temp_value': {
+        'min': 20.0,
+        'max': 40.0,
+        'decimals': 1,
+        'unit': '°C',
+        'description': 'Air Temperature',
+        'integer_only': False  # Can have decimal (e.g., 36.5°C)
+    },
 }
 
 # List of numeric classes (for convenience)

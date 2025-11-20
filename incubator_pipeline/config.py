@@ -10,17 +10,13 @@ CLASS_NAMES = [
     "spo2_value",
     "heart_rate_label",
     "heart_rate_value",
-    "pi_value",
     "air_temp_label",
     "air_temp_value",
     "skin_temp_label",
     "skin_temp_value",
     "humidity_label",
     "humidity_value",
-    "oxygen_label",
-    "oxygen_value",
-    "warning_banner",
-    "waveform_region",
+
 ]
 
 
@@ -45,11 +41,7 @@ PARAMETERS: Dict[str, ParameterSpec] = {
         label="heart_rate_label",
         unit="bpm",
     ),
-    "pi": ParameterSpec(
-        key="pi",
-        value="pi_value",
-        label=None,
-    ),
+    
     "air_temperature": ParameterSpec(
         key="air_temperature",
         value="air_temp_value",
@@ -68,12 +60,7 @@ PARAMETERS: Dict[str, ParameterSpec] = {
         label="humidity_label",
         unit="%",
     ),
-    "oxygen": ParameterSpec(
-        key="oxygen",
-        value="oxygen_value",
-        label="oxygen_label",
-        unit="%",
-    ),
+    
 }
 
 

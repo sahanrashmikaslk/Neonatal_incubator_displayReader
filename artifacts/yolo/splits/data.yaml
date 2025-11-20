@@ -1,10 +1,11 @@
 names:
+- air_temp_value
 - heart_rate_value
 - humidity_value
 - skin_temp_value
 - spo2_value
-nc: 4
-path: c:\Users\sahan\Desktop\MYProjects\Neonatal_incubator_displayReader\artifacts\yolo\splits
+nc: 5
+path: c:\Users\sahan\Desktop\MYProjects\PI_webUI_for_test-monitoring\lcd_ocr_readings\artifacts\yolo\splits
 test: test/images
 train: train/images
 val: val/images
