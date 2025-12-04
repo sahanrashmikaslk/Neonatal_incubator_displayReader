@@ -1,6 +1,6 @@
 # Neonatal Incubator Display Reader
 
-End-to-end pipeline to detect incubator display regions (YOLOv8), run OCR, validate readings, and view results in a Streamlit UI. Dataset was collected on-site at National Hospital, Galle NICU (live incubator displays) and manually labeled in Label Studio for YOLO training.
+End-to-end pipeline to detect incubator display regions (YOLOv8), run OCR, validate readings, and view results in a Streamlit UI. Dataset was collected on-site at National Hospital Galle, NICU (live incubator displays) and manually labeled in Label Studio for YOLO training.
 
 Model training was carried out as part of the final-year research project _“Development of an Automated Condition Controlling and Monitoring System for an Infant Incubator.”_
 
@@ -23,7 +23,7 @@ This README matches the latest training notebook (`notebooks/incubator_lcd_reade
 ## Prerequisites
 
 - Python 3.8+
-- Tesseract installed and on PATH (needed by the Streamlit app; core pipeline uses EasyOCR).
+- EasyOCR
 - (Optional) CUDA GPU for faster training/inference.
 
 Install deps:
@@ -98,6 +98,24 @@ What it does:
 2. Run the notebook: split → train → eval → export weights (check `artifacts/runs/<run_tag>/`).
 3. Copy weights from `models/incubator_<run_tag>.pt`.
 4. Launch Streamlit, point to the weights, and use live/upload/batch with validation.
+
+---
+
+## Model performance (latest run)
+
+From `artifacts/runs/run_20251203_134740/val_metrics.json`:
+
+- Precision: 0.994
+- Recall: 0.992
+- mAP@0.5: 0.993
+- mAP@0.5:0.95: 0.745
+
+Eval plots (same run) under `eval_plots/`:
+
+- `results.png`
+- `f1_curve.png`
+- `pr_curve.png`
+- `confusion_matrix.png`
 
 ---
 
