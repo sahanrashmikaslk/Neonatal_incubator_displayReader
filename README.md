@@ -83,7 +83,7 @@ What it does:
 
 ## OCR & validation
 
-- OCR: EasyOCR in the core pipeline; Streamlit modes can use Tesseract.
+- OCR: EasyOCR in the core pipeline.
 - Validation (`incubator_pipeline/postprocessing.py` and notebook cells):
   - Range checks, integer/decimal enforcement.
   - Decimal fixes (e.g., 365 → 36.5).
@@ -116,6 +116,8 @@ Eval plots (same run) under `eval_plots/`:
 - `f1_curve.png`
 - `pr_curve.png`
 - `confusion_matrix.png`
+
+Training setup: max 100 epochs with early stopping; this run stopped at epoch ~68 when validation plateaued.
 
 ---
 
