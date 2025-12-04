@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Users/sahan/Desktop/MYProjects/PI_webUI_for_test-monitoring/lcd_ocr_readings/notebooks/runs/mlflow/804645949114666125/4ac459be6656458b98611c3fb71468a7/artifacts
+end_time: 1764759105083
+entry_point_name: ''
+experiment_id: '804645949114666125'
+lifecycle_stage: active
+run_id: 4ac459be6656458b98611c3fb71468a7
+run_name: exp
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764751746847
+status: 3
+tags: []
+user_id: sahan

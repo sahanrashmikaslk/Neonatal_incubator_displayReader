@@ -1,0 +1,11 @@
+names:
+- air_temp_value
+- heart_rate_value
+- humidity_value
+- skin_temp_value
+- spo2_value
+nc: 5
+path: c:\Users\sahan\Desktop\MYProjects\PI_webUI_for_test-monitoring\lcd_ocr_readings\artifacts\runs\run_20251203_134740\splits
+test: test/images
+train: train/images
+val: val/images

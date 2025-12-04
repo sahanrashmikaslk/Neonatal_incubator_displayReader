@@ -1,0 +1,16 @@
+{
+  "seed": 42,
+  "data_yaml": "c:\\Users\\sahan\\Desktop\\MYProjects\\PI_webUI_for_test-monitoring\\lcd_ocr_readings\\artifacts\\runs\\run_20251203_134740\\splits\\data.yaml",
+  "class_names": [
+    "air_temp_value",
+    "heart_rate_value",
+    "humidity_value",
+    "skin_temp_value",
+    "spo2_value"
+  ],
+  "model": "yolov8n.pt",
+  "epochs_max": 100,
+  "patience": 10,
+  "run_root": "c:\\Users\\sahan\\Desktop\\MYProjects\\PI_webUI_for_test-monitoring\\lcd_ocr_readings\\artifacts\\runs\\run_20251203_134740",
+  "run_tag": "run_20251203_134740"
+}
