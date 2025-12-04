@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual envs
+venv/
+.venv/
+
+# Training artifacts and datasets
+artifacts/runs/
+artifacts/yolo/images/
+artifacts/yolo/labels/
+artifacts/yolo/labels_normalized/
+artifacts/yolo/splits/
+
+# Model weights
+models/*.pt
+artifacts/**/*.pt
+
+# Streamlit cache
+.streamlit/
